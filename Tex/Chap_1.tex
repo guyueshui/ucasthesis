@@ -1,6 +1,19 @@
 \chapter{绪论}\label{chap:introduction}
 
 \section{研究背景}
+% from semi-supervised learning by entropy minimization
+In the probabilistic framework, semi-supervised learning can be modeled as a missing data
+problem, which can be addressed by generative models such as mixture models thanks
+to the EM algorithm and extensions thereof [6].Generative models apply to the joint density of patterns and class (X, Y ). They have appealing features, but they also have major
+drawbacks. Their estimation is much more demanding than discriminative models, since
+the model of P(X, Y ) is exhaustive, hence necessarily more complex than the model of
+P(Y |X). More parameters are to be estimated, resulting in more uncertainty in the estimation process. The generative model being more precise, it is also more likely to be
+misspecified. Finally, the fitness measure is not discriminative, so that better models are
+not necessarily better predictors of class labels. These difficulties have lead to proposals
+aiming at processing unlabeled data in the framework of supervised classification [1, 5, 11].
+Here, we propose an estimation principle applicable to any probabilistic classifier, aiming
+at making the most of unlabeled data when they are beneficial, while providing a control
+on their contribution to provide robustness to the learning scheme.
 \section{研究现状}
 \section{本文贡献}
 \section{本文结构}
