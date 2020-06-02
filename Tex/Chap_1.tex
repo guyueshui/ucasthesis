@@ -43,32 +43,59 @@
 更抽象的数据表征。然而，这些方法都属于监督学习，需要数据集具有多样化的特征，
 并且每个数据样本都需要被标注。通常获取这些标注好的数据集或者去标注数据集的难度
 很大。所以，越来越多的学者将重心放在无监督学习上。在无监督学习中，
-生成式模型（见\ref{sec:gm-dm}）是相对有效的方法，而生成式模型通常基于
-马尔可夫链、极大似然和近似推断等工具。
-如受限玻尔兹曼机
-（Restricted Boltzmann Machines, RBM）\cite{smolensky1986information}
-及其扩展Deep Belief Networks (DBN)\cite{hinton2006fast}就是基于极大似然估计
-的方法。然而这些方法都无法保证良好的泛化性能。
+生成式模型（见\ref{sec:gm-dm}节）是相对有效的方法，早期的生成式模型
+（如Restricted Boltzmann Machines (RBM)\cite{smolensky1986information},
+Deep Belief Networks (DBN)\cite{hinton2006fast}, Deep Boltzmann Machines
+\cite{salakhutdinov2009deep}
+）
+通常基于马尔可夫链、极大似然和近似推断等工具。然而这些方法的计算复杂度都很高，
+并且无法保证良好的泛化性能。近年来，生成对抗网络
+（Generative Adversarial Networks, GAN）\cite{goodfellow2014generative}作为
+一种新的生成式模型受到了广泛的关注。该模型包含两个网络：生成器和判别器。
+在对抗训练的过程中，生成器会学习到数据的概率分布，同时生成逼真的数据去迷惑
+判别器，而判别器的目标是从虚假数据中区分出真实数据。两个网络之间通过相互对抗，
+最终达到一个平衡点。值得一提的是，GAN不需要使用复杂的近似推断或马尔可夫链，
+并且在计算机视觉，自然语言处理及其他众多领域都有较好的生成效果。
 
-2014年，\citet{goodfellow2014generative}提出生成对抗网络模型
-（Generative Adversarial Networks, GAN），它包含两个网络：生成器和判别器。
-生成器的目标是生成逼真的数据去迷惑判别器，判别器的目标是从虚假数据中区分出真实
-数据。
+% 生成对抗网络最大的贡献在于它提出了一种对抗的思想。
+% 这种思想已经成功应用于众多
+% 领域如计算机视觉、自然语言处理等。前些年的AlphaGo\cite{silver2016mastering}打败
+% 了人类顶尖围棋手的事件让AI引起了广泛关注，而AlphaGo的中间阶段就运用了对抗训练的
+% 思想。对抗样本\cite{kurakin2016adversarial,athalye2018obfuscated,
+% goodfellow2014explaining,kos2018adversarial}也利用了对抗的思想。
+% 所谓对抗样本是指那些与真实数据
+% 差别很小却被判为异常的，或者与真实数据相差很大却被判为真实类别的样本。
+
+% GAN变体以及应用非常丰富。如前所述，GAN在不需要知道真实数据分布，
+% 不需要做额外假设的情况下，可以通过随机噪声生成逼真的数据样本。这使得GAN在计算
+% 机视觉和图像处理领域的应用大获成功。
+GAN在图像超分辨率方面有很好的效果。SRGAN\cite{ledig2017photo}是第一个实现图像
+超分辨率的生成对抗网络模型，\citet{wang2018esrgan}通过对SRGAN的三个主要组成
+部分进行改进得到了ESRGAN，比如，它利用\citet{jolicoeur2018relativistic}中提出
+的方法令判别器输入相对的真实距离而非绝对距离。
+基于CycleGAN\cite{zhu2017unpaired}，\citet{yuan2018unsupervised}提出
+Cycle-in-Cycle GAN用于无监督的图像超分辨率。\citet{ding2019tgan}提出TGAN，
+通过探索张量结构来生成大型高质量图像。
+
+GAN在图像生成方面也有很多应用。\citet{tran2017disentangled}提出DR-GAN用于对姿态鲁棒的人脸识别。\citet{huang2017beyond}提出了一种通过同时感知局部细节和整体结构来生成逼真的正面视图的GAN（TP-GAN）。\citet{ma2017pose}提出了一种使用姿势指导生成人体图像的生成网络（PG$^2$），该网络基于一个新的姿势和该人体的图像来合成任意姿势的该人体图像。
+% \citet{cao2018learning}提出了一种基于GAN的高保真姿态不变性模型，用于生成高分辨率正面人脸。
+虽然大多数论文使用GAN来合成二维图像\cite{bao2017cvae,dong2017semantic}，但\citet{wu2016learning}使用GAN和三维卷积生成了三维样本，他们生成了新颖的物体包括汽车，椅子，沙发和桌子。\citet{im2016generating}使用循环对抗网络生成图像。\citet{yang2017lr}提出了用于图像生成的分层循环生成对抗网络（LR-GAN）。
+
+GAN也可以用于目标检测。考虑学习一个对变形和遮挡鲁棒的物体检测器，一种方法是使用具有变形和遮挡的数据集来训练。但是一些变形和遮挡非常罕见，它们在现实中可能不会发生。此时可以用GAN来生成这样的数据以参与训练。\citet{wang2017fast}使用GAN生成具有变形和遮挡的实例，对手的目的是生成难以被对象检测器分类的样本。通过将segmentor和GAN相结合，Segan\cite{ehsani2018segan}能够检测到图像中其他物体遮挡的物体。为了解决小物体检测问题，\citet{li2017perceptual}]提出感知生成对抗网络模型；\citet{bai2018sod}提出了一种端到端的多任务GAN（MTGAN）。
+
+此外，GAN在分类问题中也有所应用，这也是本中的研究重点。关于使用GAN做分类，
+
+- CatGAN
+- SGAN 
+- tripleGAN
+- triangleGAN
+- ETGAN
+- InfoGAN
 
 % from semi-supervised learning by entropy minimization
-In the probabilistic framework, semi-supervised learning can be modeled as a missing data
-problem, which can be addressed by generative models such as mixture models thanks
-to the EM algorithm and extensions thereof [6].Generative models apply to the joint density of patterns and class (X, Y ). They have appealing features, but they also have major
-drawbacks. Their estimation is much more demanding than discriminative models, since
-the model of P(X, Y ) is exhaustive, hence necessarily more complex than the model of
-P(Y |X). More parameters are to be estimated, resulting in more uncertainty in the estimation process. The generative model being more precise, it is also more likely to be
-misspecified. Finally, the fitness measure is not discriminative, so that better models are
-not necessarily better predictors of class labels. These difficulties have lead to proposals
-aiming at processing unlabeled data in the framework of supervised classification [1, 5, 11].
-Here, we propose an estimation principle applicable to any probabilistic classifier, aiming
-at making the most of unlabeled data when they are beneficial, while providing a control
-on their contribution to provide robustness to the learning scheme.
+In the probabilistic framework, semi-supervised learning can be modeled as a missing data problem, which can be addressed by generative models such as mixture models thanks to the EM algorithm and extensions thereof [6].Generative models apply to the joint density of patterns and class (X, Y ). They have appealing features, but they also have major drawbacks. Their estimation is much more demanding than discriminative models, since the model of P(X, Y ) is exhaustive, hence necessarily more complex than the model of P(Y |X). More parameters are to be estimated, resulting in more uncertainty in the estimation process. The generative model being more precise, it is also more likely to be misspecified. Finally, the fitness measure is not discriminative, so that better models are not necessarily better predictors of class labels. These difficulties have lead to proposals aiming at processing unlabeled data in the framework of supervised classification [1, 5, 11].  Here, we propose an estimation principle applicable to any probabilistic classifier, aiming at making the most of unlabeled data when they are beneficial, while providing a control on their contribution to provide robustness to the learning scheme.
 
+在概率框架中，可以将半监督学习建模为丢失的数据问题，由于EM算法及其扩展[6]，可以通过生成模型（例如混合模型）来解决该问题。生成模型适用于模式的联合密度和类（X，Y）。它们具有吸引人的功能，但也有许多缺点。他们的估计比判别模型要严格得多，因为P（X，Y）模型是穷举性的，因此必定比P（Y | X）模型更复杂。要估计更多的参数，导致估计过程中更多的不确定性。生成模型更精确，也更可能被错误指定。最后，适应度度量没有区别，因此，更好的模型不一定是类别标签的更好预测指标。这些困难导致提出了旨在在监督分类框架内处理未标记数据的提议[1、5、11]。在这里，我们提出一种适用于任何概率分类器的估计原理，旨在在有益的情况下充分利用未标记的数据，同时控制其贡献，从而为学习方案提供鲁棒性
 
 \section{研究现状}
 \section{本文贡献}
