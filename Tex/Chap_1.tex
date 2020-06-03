@@ -81,9 +81,22 @@ GAN在图像生成方面也有很多应用。\citet{tran2017disentangled}提出D
 % \citet{cao2018learning}提出了一种基于GAN的高保真姿态不变性模型，用于生成高分辨率正面人脸。
 虽然大多数论文使用GAN来合成二维图像\cite{bao2017cvae,dong2017semantic}，但\citet{wu2016learning}使用GAN和三维卷积生成了三维样本，他们生成了新颖的物体包括汽车，椅子，沙发和桌子。\citet{im2016generating}使用循环对抗网络生成图像。\citet{yang2017lr}提出了用于图像生成的分层循环生成对抗网络（LR-GAN）。
 
-GAN也可以用于目标检测。考虑学习一个对变形和遮挡鲁棒的物体检测器，一种方法是使用具有变形和遮挡的数据集来训练。但是一些变形和遮挡非常罕见，它们在现实中可能不会发生。此时可以用GAN来生成这样的数据以参与训练。\citet{wang2017fast}使用GAN生成具有变形和遮挡的实例，对手的目的是生成难以被对象检测器分类的样本。通过将segmentor和GAN相结合，Segan\cite{ehsani2018segan}能够检测到图像中其他物体遮挡的物体。为了解决小物体检测问题，\citet{li2017perceptual}]提出感知生成对抗网络模型；\citet{bai2018sod}提出了一种端到端的多任务GAN（MTGAN）。
+GAN也可以用于目标检测。考虑学习一个对变形和遮挡鲁棒的物体检测器，一种方法是使用具有变形和遮挡的数据集来训练。但是一些变形和遮挡非常罕见，它们在现实中可能不会发生。此时可以用GAN来生成这样的数据以参与训练。\citet{wang2017fast}使用GAN生成具有变形和遮挡的实例，对手的目的是生成难以被对象检测器分类的样本。通过将segmentor和GAN相结合，Segan\cite{ehsani2018segan}能够检测到图像中被其他物体遮挡的物体。为了解决小物体检测问题，\citet{li2017perceptual}]提出感知生成对抗网络模型；\citet{bai2018sod}提出了一种端到端的多任务GAN（MTGAN）。
 
-此外，GAN在分类问题中也有所应用，这也是本中的研究重点。关于使用GAN做分类，
+\section{研究内容与意义}
+本文研究基于生成对抗网络的分类模型。传统的分类方法如支持向量机（Support Vector Machine，SVM）、决策树（Decision Tree）、朴素贝叶斯（Naive Bayes）、逻辑回归（Logistic Regression）、K近邻（K-Nearest Neighbors，KNN）都属于监督学习，而且只适用于数据量较小的情况。随着科技的飞速发展，各行各业每时每刻都在产生海量数据，对于大体量、高维度、高差异的数据，传统分类方法不免有些捉襟见肘。因此，伴随着深度学习领域的崛起，许多学者开始使用深度神经网络去做分类研究\cite{krizhevsky2012imagenet,taigman2014deepface}。在复杂数据面前，神经网络的超强拟合能力使其成为了挖掘数据价值的不二之选。以上这些方法的都包含以下三个过程：数据压缩，特征提取和模型预测。这些过程往往依赖于大量的数据标注，但现实生活中标注好的数据十分稀缺：有些涉及隐私，有些获取代价高昂，有些甚至无法获得。因此人们开始研究无监督分类。
+
+无监督分类通常建模为聚类问题，并且已经具有一些经典的方法：
+K-means、Gaussian mixture model、Density estimation，这些方法均是针对数据分布进行建模。此外，一些判别式方法比如Maximum margin clustering (MMC)\cite{xu2005maximum}、Regularized information maximization (RIM)\cite{krause2010discriminative}，则是将数据划分到某个类别，而无须估计数据分布。尽管判别式方法更为直接，但是它们容易受一些虚假相关性的影响而产生过拟合\cite{springenberg2015unsupervised}。当与深度神经网络这种拟合能力很强的模型相结合的时候，过拟合现象尤为显著。
+随着深度学习的发展，基于深度模型的无监督或半监督方法也渐渐出现。它们通常训练一个生成式模型（如波尔兹曼机\cite{salakhutdinov2009deep,goodfellow2013multi}、前馈神经网络\cite{bengio2014deep,kingma2014semi}以及自编码器\cite{hinton2006reducing,vincent2008extracting}），通过重建输入样本来学习数据特征，刻画数据分布。因此，它们避免了因直接划分数据而产生的过拟合问题。但是这些方法在重建训练样本的过程中，并没有额外的约束，所以会保留原始数据的所有信息，这和训练分类器的目标相背\footnote{在训练分类器时，通常只希望保留和分类目标相关的信息，从而使得模型对其他不重要的信息更加鲁棒。}。
+
+生成对抗网络结合了生成式和判别式模型，一定程度上克服了上述问题。通过将判别器扩展为分类器，对抗的训练机制可以让判别器无监督或半监督地学习到数据的类别特征，从而达到分类的效果。与此同时，生成器生成的数据一方面可以提高判别器的鲁棒性，一方面可以用于数据增强，进一步提升判别性能。
+
+
+\section{研究现状}
+%GAN在分类问题中也有所应用\cite{springenberg2015unsupervised,salimans2016improved,odena2016semi,chongxuan2017triple,wu2019enhancing}，这也是本文的研究重点。
+%首先了解以下GAN做分类的基本原理。
+%从未标注或仅部分标注的数据中学习非线性分类器是机器学习中长期存在的问题。它的前提是，训练数据的结构特征包含可用于推断未知标签的信息。也就是说，在无监督学习中，我们假设输入分布$p(x)$包含有关$p(y|x)$的信息，其中$y \in \Omega = \{\omega_1, \ldots, \omega_K\}$表示未知标签。通过充分利用有标签的和无标签的数据，人们希望学习出一个能够捕获到其中共性的表征。然后分类器会进一步利用这些表征，仅通过一小部分的有标签数据就能够学习到潜在数据的分布。
 
 - CatGAN
 - SGAN 
@@ -92,11 +105,30 @@ GAN也可以用于目标检测。考虑学习一个对变形和遮挡鲁棒的�
 - ETGAN
 - InfoGAN
 
-% from semi-supervised learning by entropy minimization
-In the probabilistic framework, semi-supervised learning can be modeled as a missing data problem, which can be addressed by generative models such as mixture models thanks to the EM algorithm and extensions thereof [6].Generative models apply to the joint density of patterns and class (X, Y ). They have appealing features, but they also have major drawbacks. Their estimation is much more demanding than discriminative models, since the model of P(X, Y ) is exhaustive, hence necessarily more complex than the model of P(Y |X). More parameters are to be estimated, resulting in more uncertainty in the estimation process. The generative model being more precise, it is also more likely to be misspecified. Finally, the fitness measure is not discriminative, so that better models are not necessarily better predictors of class labels. These difficulties have lead to proposals aiming at processing unlabeled data in the framework of supervised classification [1, 5, 11].  Here, we propose an estimation principle applicable to any probabilistic classifier, aiming at making the most of unlabeled data when they are beneficial, while providing a control on their contribution to provide robustness to the learning scheme.
+%% from semi-supervised learning by entropy minimization
+%In the probabilistic framework, semi-supervised learning can be modeled as a missing data problem, which can be addressed by generative models such as mixture models thanks to the EM algorithm and extensions thereof [6].Generative models apply to the joint density of patterns and class (X, Y ). They have appealing features, but they also have major drawbacks. Their estimation is much more demanding than discriminative models, since the model of P(X, Y ) is exhaustive, hence necessarily more complex than the model of P(Y |X). More parameters are to be estimated, resulting in more uncertainty in the estimation process. The generative model being more precise, it is also more likely to be misspecified. Finally, the fitness measure is not discriminative, so that better models are not necessarily better predictors of class labels. These difficulties have lead to proposals aiming at processing unlabeled data in the framework of supervised classification [1, 5, 11].  Here, we propose an estimation principle applicable to any probabilistic classifier, aiming at making the most of unlabeled data when they are beneficial, while providing a control on their contribution to provide robustness to the learning scheme.
+%
+%在概率框架中，可以将半监督学习建模为丢失的数据问题，由于EM算法及其扩展[6]，可以通过生成模型（例如混合模型）来解决该问题。生成模型适用于模式的联合密度和类（X，Y）。它们具有吸引人的功能，但也有许多缺点。他们的估计比判别模型要严格得多，因为P（X，Y）模型是穷举性的，因此必定比P（Y | X）模型更复杂。要估计更多的参数，导致估计过程中更多的不确定性。生成模型更精确，也更可能被错误指定。最后，适应度度量没有区别，因此，更好的模型不一定是类别标签的更好预测指标。这些困难导致提出了旨在在监督分类框架内处理未标记数据的提议[1、5、11]。在这里，我们提出一种适用于任何概率分类器的估计原理，旨在在有益的情况下充分利用未标记的数据，同时控制其贡献，从而为学习方案提供鲁棒性
 
-在概率框架中，可以将半监督学习建模为丢失的数据问题，由于EM算法及其扩展[6]，可以通过生成模型（例如混合模型）来解决该问题。生成模型适用于模式的联合密度和类（X，Y）。它们具有吸引人的功能，但也有许多缺点。他们的估计比判别模型要严格得多，因为P（X，Y）模型是穷举性的，因此必定比P（Y | X）模型更复杂。要估计更多的参数，导致估计过程中更多的不确定性。生成模型更精确，也更可能被错误指定。最后，适应度度量没有区别，因此，更好的模型不一定是类别标签的更好预测指标。这些困难导致提出了旨在在监督分类框架内处理未标记数据的提议[1、5、11]。在这里，我们提出一种适用于任何概率分类器的估计原理，旨在在有益的情况下充分利用未标记的数据，同时控制其贡献，从而为学习方案提供鲁棒性
+CatGAN\cite{springenberg2015unsupervised}将判别器从二分类输出扩展为多分类输出，同时设计了新的对抗目标，在MNIST\cite{lecun1989backpropagation}和CIFAR-10\cite{krizhevsky2009learning}上均取得了十分可观的分类准确率。\citet{salimans2016improved}提出了几种训练GAN的技巧，以及给出了一种半监督分类方法。不同于CatGAN，他们令判别器输出$K+1$个类别，其中$K$为数据集原始的类别个数，而多出来的类别就代表着生成器生成的虚假数据，也就是把生成器的所有输出都归为一类。这显然忽略了生成器生成的不同类别的数据。SGAN\cite{odena2016semi}提出了类似的网络模型。\citet{dai2017good}指出给定判别器的目标，良好的半监督性能需要一个较差的生成器，即对一个判别器来说，分类和区分真假是不兼容的目标。TripleGAN\cite{chongxuan2017triple}也指出了这一点，同时提出了改进方法：将分类任务和判别任务分配给两个不同的模块。具体来说，TripleGAN增加了一个分类网络，令判别器专注于区分真假，同时对训练目标做了相应改动，使得生成器和分类器对应的概率分布同时收敛到真实数据分布。\citet{wu2019enhancing}在TripleGAN的基础上应用了feature matching\cite{salimans2016improved}，并且引入了两个分类网络协同工作，达到了更高的性能。
+% NOTE:为什么不在improvedGAN上面扩展，加互信息呢？
 
-\section{研究现状}
-\section{本文贡献}
-\section{本文结构}
+
+\section{本文工作}
+本文主要研究两个基于生成对抗网络的分类模型，基于这两个模型提出一些算法改进。第一个模型是InfoGAN\cite{chen2016infogan}，严格来说它并不属于基于GAN的分类模型，但是它包含一个辅助网络，契合了分类器的特征，因此我们可以对辅助网络添加用于分类的正则项，将辅助网络训练成一个分类器。第二个模型是CatGAN\cite{springenberg2015unsupervised}，它是完全以分类为目标而设计的，因此其中有很多思想值得我们参考。例如，对于目标函数的改变，CatGAN使用判别器输出的条件分布的熵作为判别真假的依据。它创新性地引入了信息论尺度作为训练目标，在具备实践效果的同时具备一定的可解释性。
+
+对于InfoGAN，我们几乎没有改变模型结构，通过在辅助网络的目标函数添加了一个分类损失，就达到了比较可观的分类准确率。称该模型为Classifier InfoGAN (C-InfoGAN)，它保留了InfoGAN的大部分优点：比如通过离散隐变量控制生成图片的类别，以及通过连续隐变量调整生成图片的局部细节，同时还具有可观的分类性能。此外，本文还提出了半监督版本的训练方法。在拥有少量标签的情况下，可将标签直接放入辅助网络中，从而充分利用标签信息，将真实标签和隐变量相互绑定，解决了InfoGAN中离散隐变量和真实标签不对应的问题。
+
+对于CatGAN，本文受InfoGAN启发，将生成器的输入噪声分解为无意义噪声：提供模型的容量，使得模型具有足够的自由度去学习数据的细节（高度耦合的特征）；和有意义隐变量：用于在学习过程中绑定到数据类别；同时优化隐变量和生成图片之间的互信息，提出了InfoCatGAN模型。该模型可以在牺牲少量分类准确率的情况下，大大提高生成器生成图片的质量。这是由于CatGAN使用条件熵作为目标函数，没有类别指向性，因为无法从条件熵的高低推知条件分布的形态。InfoCatGAN模型通过在隐空间构造一维隐变量，在训练过程中将生成数据的类别标签与之绑定，使得可以通过该隐变量来控制生成数据的类别。改进的主要思想就是在生成虚假数据的时候，令生成器生成具体类别的数据，而不是笼统地最小化条件熵。此外，提出的模型能够很好的兼容半监督学习，并且在少量标签信息的帮助下，隐变量和真实类别一一对应，也就是说，可以通过隐变量控制生成图片的类别。
+
+本文提出了两个改进模型都使用了基于互信息的正则项，这从侧面说明了信息论在未来的深度学习领域拥有值得探索的价值。
+
+\section{文章结构}
+本文整体章节结构安排如下：
+\begin{itemize}
+  \item 第一章为绪论。主要介绍本文的研究背景即当前深度学习领域的蓬勃发展，接着介绍了本文的研究内容与意义，然后介绍了生成对抗网络的发展及众多应用，引入使用生成对抗网络模型做分类的动机和好处，介绍了国内外关于该问题的研究现状。最后介绍了本文的主要工作。
+  \item 第二章为预备知识。首先介绍了生成式模型和判别式模型的概念，接着介绍了生成对抗网络的基本原理。最后详细阐述了InfoGAN和CatGAN的模型结构及各自的原理和目标函数。
+  \item 第三章为本文工作。分别详细介绍了本文提出的两个模型C-InfoGAN和InfoCatGAN，阐明了它们的原理以及目标函数，同时给出了训练方法。
+  \item 第四章为模型评估。主要介绍了评估模型的方法和尺度，以及实验细节。接着给出了两个模型在MNIST和FashionMNIST上的结果，以及对结果做了简单分析，同时给出了模型的收敛速度。
+  \item 第五章为总结与展望。balabala...
+\end{itemize}
