@@ -1,5 +1,7 @@
 \chapter{模型评估}\label{chap:experiments}
-本章将在MNIST\citep{lecun1989backpropagation}和FashionMNIST\citep{xiao2017/online}数据集上评估模型。MNIST是深度学习广泛使用的评价模型的基础数据集，它包含60000个训练样本，10000个测试样本，每个样本均为$28\times 28$的灰度手写数字图片。FashionMNIST具有和MNIST相同的数据结构，同样是60000个训练样本和10000个测试样本，每个样本均为$28\times 28$灰度图片，也具有10个类别。然而相比于MNIST，FashionMNIST的图片构成更复杂，因此对模型具有更大的挑战。
+
+\section{引言}
+本章将在MNIST\citep{lecun1989backpropagation}和FashionMNIST\citep{xiao2017/online}数据集上评估模型。MNIST是深度学习广泛使用的评价模型的基础数据集，它包含60000个训练样本，10000个测试样本，每个样本均为$28\times 28$的灰度手写数字图片。FashionMNIST具有和MNIST相同的数据结构，同样是60000个训练样本和10000个测试样本，每个样本均为$28\times 28$灰度图片，也具有10个类别。然而相较于MNIST，FashionMNIST的图片构成更为复杂，因此对模型具有更大的挑战。
 
 在所有实验中，本文主要考察两个指标：分类准确率和图片生成质量。对于分类准确率，计算模型预测值并不像一般分类器那样直接。隐变量虽然可以学习到数据类别的特征，但是其取值并不一定和真实标签正确对应（例如$c=1$对应生成真实标签为$\omega_2$的数据）。因此不能直接使用隐变量的取值作为模型的预测值，必须将隐变量的取值与真实标签之间做一个映射。
 
@@ -20,12 +22,12 @@
 显然$\ell_i, ~y_i \in \Omega = \{\omega_1, \omega_2, \cdots, \omega_K\}$。定义映射$f: \Omega \to \Omega$,
 \[
   f(\ell) = \argmax_y \left( 
-    \sum_{\mathbf{x}: \ell(\mathbf{x}) = \ell} \mathbf{1}\left(y(\mathbf{x}), y\right) 
+    \sum_{\mathbf{x}: \ell(\mathbf{x}) = \ell} \mathbf{1}\Big(y(\mathbf{x}), y\Big) 
   \right),
 \]
 其中$\ell(\cdot)$表示模型预测值，$y(\cdot)$表示数据真实标签，$\mathbf{1}(a, b) = 1$当且仅当$a = b$, 否则为零。此时，给定模型预测的虚假标签$\ell$，映射$f$都可以将它映射为真实标签$f(\ell)$。这就完成了虚假标签到真实标签的转换\footnote{在实际应用中，可能会出现某一行的最大值不唯一的情况，此时选择第一个最大值索引作为输出。值得注意的是，这种情况在实验中并不多见。}。简单来说，模型为每一个数据$\mathbf{x}_i$输出对应的概率向量$p(y|\mathbf{x}_i)$，从而分配虚假标签$\ell_i$（概率向量中最大概率对应的索引），然后将预测值和真实标签对比：将虚假标签落入最多的真实标签的取值作为该虚假标签的取值。比如在所有10个被分类为虚假标签$\ell_1$的样本中，有9个真实标签为$\omega_3$，则将虚假标签$\ell_1$映射到真实类别$\omega_3$。
 
-对于图片生成质量，本文采用Fréchet Inception Distance (FID)\citep{heusel2017gans}来进行衡量\footnote{FID一般用于彩色图片，而MNIST数据集是单通道的灰度图片，本文的做法是将单通道复制3份，形成一张RGB彩色图片然后再计算其FID值。}，相较于Inception Score\citep{salimans2016improved}只考虑生成数据，FID还利用了真实数据，因此更能反映生成数据和真实数据的差异。FID越小代表生成的图片和真实图片越接近，生成质量越好。
+对于图片生成质量，本文采用Fréchet Inception Distance (FID)\citep{heusel2017gans}来进行衡量\footnote{FID一般用于彩色图片，而MNIST数据集是单通道的灰度图片，本文的做法是将单通道复制3份，形成一张RGB彩色图片然后再计算其FID值。}。相较于Inception Score\citep{salimans2016improved}只考虑生成数据，FID还利用了真实数据，因此更能反映生成数据和真实数据的差异。FID越小代表生成的图片和真实图片越接近，生成质量越好。
 
 \begin{figure}[htb]
   \centering
@@ -44,53 +46,60 @@
     \caption{$c_2$调控生成图片的亮度}
     \label{ffig:fa-icg-light}
   \end{subfigure} 
-  \caption{隐变量对生成图片的调控。图中每一行对应类别隐变量的一个取值，每一列对应其他某个隐变量（固定剩余隐变量）的连续变化。}
+  \bicaption[隐变量对生成图片的调控]
+  {隐变量对生成图片的调控。图中每一行对应类别隐变量的一个取值，每一列对应其他某个隐变量（固定剩余隐变量）的连续变化。}
+  {The control of latent variables on the generated pictures. Each row in the figure corresponds to a value of the category latent code, and each column corresponds to variants of a continuous code with other codes fiexd.}
   \label{fig:latent-varies}
 \end{figure}
 
 \section{实现细节}
-在实践中，模型中的所有模块（生成器、判别器、辅助网络等）均被实现为深度神经网络。具体实现可在Github上查看\footnote{实现代码地址：\url{https://github.com/guyueshui/baGAN}}。\textcolor{red}{网络结构在附录中给出。}
+在实践中，模型中的所有模块（生成器、判别器、辅助网络等）均被实现为深度神经网络。具体实现可在Github上查看\footnote{实现代码地址：\url{https://github.com/guyueshui/baGAN}}。
 
 \subsection{C-InfoGAN}
 对于C-InfoGAN模型，我们的设定和InfoGAN保持大致相同。辅助网络$Q$和判别器$D$共享大部分网络结构，$Q$在判别器的尾部（通常是倒数第二层）分离出一个全连接网络，输出后验概率的估计$Q(\bd{c}|\bd{x})$。因此，C-InfoGAN带来的计算复杂度增加较小。对于离散隐变量$c_i$，在输出之前施加一个softmax激活层，得到的输出代表$Q(c_i|\bd{x})$。对于连续隐变量$c_j$，我们假设其先验分布为高斯分布，然后利用$Q$网络输出它的均值和方差，放到高斯分布中去拟合，计算差值。
 由于GAN在训练时容易坍塌，DCGAN\citep{radford2015unsupervised}提出了一种训练稳定的生成对抗网络结构，所以我们采用的网络结构对此有很多参考。关于超参数的选择我们也沿用InfoGAN的设定，对于离散隐变量设置为1；对于连续隐变量，设置为较小的值0.1。
 
-表~\ref{tab:m-cig-netarch}是给出了C-InfoGAN在MNIST上的网络结构，如前所述，判别器$D$和辅助网络$Q$共享大部分网络结构。在MNIST数据集上，噪声空间的构成为一个10维离散隐变量，两个连续隐变量和62维高斯噪声，最终得到的噪声维度为74。对于FashionMNIST，我们在实践中发现使用同样的网络结构也能达到很好的效果。因此本文对于两个数据集采用同样的网络结构。
-\begin{table}
-  % \renewcommand\arraystretch{0.7} % set row height
+表~\ref{tab:m-cig-netarch}给出了C-InfoGAN在MNIST上的网络结构，其中各缩写的意义为：FC表示全连接层；ReLU代表ReLU激活函数；lReLU代表Leaky ReLU激活函数; Tanh代表双曲正切激活函数；sigmoid表示sigmoid激活函数；softmax表示softmax变换；conv表示卷积层；upconv表示反卷积层；bn表示batch normalization。
+如前所述，判别器$D$和辅助网络$Q$共享大部分网络结构。在MNIST数据集上，噪声空间的构成为一个10维离散隐变量，两个连续隐变量和62维高斯噪声，最终得到的噪声维度为74。对于FashionMNIST，我们在实践中发现使用同样的网络结构也能达到很好的效果。因此本文对于两个数据集采用同样的网络结构。
+\begin{table}[htbp]
+  %\renewcommand\arraystretch{0.7} % set row height
   \centering
   \bicaption{C-InfoGAN在MNIST上的网络结构}
   {Architectures of C-InfoGAN used for MNSIT dataset}
   \begin{tabular}{l|l}
-    \hline
-    \textbf{生成器$G$}               & \textbf{判别器$D$/辅助网络$Q$} \\ \hline
-    Input $\in \reals^{74}$          & Input $28\times 28$ Gray image \\ \hline
-    fc 1024. bn. relu                & conv 64: k4, s2, p1. lrelu  \\ \hline
-    fc $7\times7\times128$. bn. relu & conv 128: k4, s2, p1. bn. lrelu \\ \hline
-    upconv 64: k4, s2, p1. bn. relu  & fc 1024. bn. lrelu \\ \hline
-    upconv 1: k4, s2, p1. tanh       & fc 1. sigmoid. output for $D$, \\
-    ~                                & fc 128. bn. lrelu. fc. output for $Q$ \\
-    \hline
+    \toprule
+    \textbf{生成器$G$}                        & \textbf{判别器$D$/辅助网络$Q$} \\ \midrule
+    Input $\in \reals^{74}$                   & Input $28\times 28$ Gray image \\ \hline
+    FC. 1024 ReLU. bn                         & $4\times 4$ conv. 64 lReLU. bn  \\ \hline
+    FC. $7\times7\times128$ ReLU. bn          & $4\times 4$ conv. 128 lReLU. bn \\ \hline
+    $4\times 4$ upconv. 64 ReLU. stride 2. bn & FC. 1024 lReLU. bn \\ \hline
+    ~                                         & FC. 1 sigmoid. output for $D$, \\
+    $4\times 4$ upconv. 1 Tanh. stride 2      & FC. 128-bn-lReRL-FC. output for $Q$ \\
+    \bottomrule
   \end{tabular}
   \label{tab:m-cig-netarch}
 \end{table}
 
 \subsection{InfoCatGAN}
-对于InfoCatGAN，我采用的模型如下。
-\begin{table}
+通常情况下GAN的训练很不稳定。首先，如果判别器学习得太快，则\eqref{eq:gan-obj}式可能变得不稳定（此时生成器的损失函数梯度消失）。
+%其次，生成器可能无法生成某一种数据模式，或者可能在不同模式之间疯狂切换。所以我们采取了两项措施来稳定训练。首先，在生成器和判别器中使用batch normalization。这有助于限制activation map，在实践中我们发现它可以防止生成器的模式切换以及在少数标签情况下提高判别器的泛化能力。值得一提的是，
+其次，生成器可能对于某种特定的模式无法生成；或者是只能生成某种特定的模式而无法生成其它模式。首先我们在生成器和判别器加入batch normalization，这样可以限制激活输出中的每个值的大小，并且实践证明加入batch normalization可以让生成器生成的图像更稳定，在给定少量标签的情况下，还可以提高判别器的泛化能力。值得一提的是，
+我们发现在输入层加噪声并没有对实验结果产生明显影响，这一点和\citet{springenberg2015unsupervised}不一致。表~\ref{tab:m-icg-netarch}给出了InfoCatGAN的网络结构。在MNIST数据集上，InfoCatGAN的噪声空间的构成和C-InfoGAN类似，不同的没有连续隐变量，即包含一个10维离散隐变量和一个62维高斯噪声，最终得到的噪声维度为72。对FashionMNIST也使用同样的配置。
+\begin{table}[h]
   % \renewcommand\arraystretch{0.7} % set row height
   \centering
   \bicaption{InfoCatGAN在MNIST上的网络结构}
   {Architectures of InfoCatGAN used for MNSIT dataset}
   \begin{tabular}{l|l}
-    \hline
-    \textbf{生成器$G$}               & \textbf{判别器$D$} \\ \hline
-    Input $\in \reals^{74}$          & Input $28\times 28$ Gray image \\ \hline
-    fc 1024. bn. relu                & conv 64: k4, s2, p1. lrelu  \\ \hline
-    fc $7\times7\times128$. bn. relu & conv 128: k4, s2, p1. bn. lrelu \\ \hline
-    upconv 64: k4, s2, p1. bn. relu  & fc 1024. bn. lrelu \\ \hline
-    upconv 1: k4, s2, p1. tanh       & fc 10. softmax \\
-    \hline
+    \toprule
+    \textbf{生成器$G$}                        & \textbf{判别器$D$} \\
+    \midrule
+    Input $\in \reals^{72}$                   & Input $28\times 28$ Gray image \\ \hline
+    FC. 1024 ReLU. bn                         & $4\times 4$ conv. 64 lReLU. stride 2  \\ \hline
+    FC. $7\times7\times128$ ReLU. bn          & $4\times 4$ conv. 128 lReLU. stride 2. bn \\ \hline
+    $4\times 4$ upconv. 64 ReLU. stride 2. bn & FC. 1024 lReLU. bn \\ \hline
+    $4\times 4$ upconv. 1 Tanh. stride 2     & FC. 10-way softmax \\
+    \bottomrule
   \end{tabular}
   \label{tab:m-icg-netarch}
 \end{table}
@@ -99,7 +108,7 @@
 
 \subsection{MNIST}\label{sec:icg-ex}
 
-图~\ref{ffig:m-cg}和图~\ref{ffig:m-icg}是在无监督情况下CatGAN和InfoCatGAN的生成效果，可以看到，InfoCatGAN的生成效果明显高于CatGAN，并且每一行基本是一种数字类别，对应隐变量的不同取值。半监督情况下有类似的结果，不同的是在少量标签信息的辅助下，InfoCatGAN可以将隐变量$c$和真实标签正确绑定，$c=1$对应生成数字`1'，见图~\ref{ffig:m-ss-icg}。CatGAN生成的图片质量很差，原因在于其目标函数是为了分类而设计的。生成器的作用只是为了判别器能够更加鲁棒，如\ref{sec:icg-us}节所述，从\eqref{eq:catgan-g}式中可以看到，$G$的目标函数只有条件熵，无法针对性地生成图片，从而会降低生成图片的质量。而InfoCatGAN由于增加了隐变量$c$，并在训练过程中有意识地将生成数据的类别与之绑定，所以生成的图片质量较好。
+图~\ref{ffig:m-cg}和图~\ref{ffig:m-icg}是在无监督情况下CatGAN和InfoCatGAN的生成效果，可以看到，InfoCatGAN的生成效果明显高于CatGAN，并且每一行基本是一种数字类别，对应隐变量的不同取值。半监督情况下有类似的结果，不同的是在少量标签信息的辅助下，InfoCatGAN可以将隐变量$c$和真实标签正确绑定，$c=1$对应生成数字`1'，见图~\ref{ffig:m-ss-icg}。CatGAN生成的图片质量很差，原因在于其目标函数是为了分类而设计的。生成器的作用只是为了判别器能够更加鲁棒，如\ref{sec:icg-us}节所述，从\eqref{eq:catgan-obj}式中可以看到，$G$的目标函数只有条件熵，无法针对性地生成图片，从而会降低生成图片的质量。而InfoCatGAN由于增加了隐变量$c$，并在训练过程中有意识地将生成数据的类别与之绑定，所以生成的图片质量较好。
 
 \begin{figure}[htbp]
   \centering
@@ -135,7 +144,9 @@
     \label{ffig:m-ss-ig}
   \end{subfigure}
 
-  \caption{模型在MNIST上得生成效果。在InfoCatGAN和C-InfoGAN的生成结果中，每一行对应隐变量$c$的一个取值，从0到9。}
+  \bicaption[模型在MNIST上的生成效果]
+  {模型在MNIST上的生成效果。在InfoCatGAN和C-InfoGAN的生成结果中，每一行对应隐变量$c$的一个取值，从0到9。}
+  {Generated images on MNIST. Each row corresponds to a value of the categorical latent code $c$, from 0 to 9.}
   \label{fig:mnist}
 \end{figure}
 
@@ -144,19 +155,20 @@
 
 \begin{table}[htbp]
   \centering
-  \caption{MNIST分类准确率对比}
+  \bicaption{MNIST分类准确率对比}{Classification accuracy on MNIST}
   \label{tab:cat}
-  \begin{tabular}{|l|c|c|}
-    \hline
+  \begin{tabular}{lcc}
+    \toprule
     \textbf{模型} & \textbf{准确率（\%）} & \textbf{FID} \\
-    \hline
-    CatGAN & 64.41 & 236.75  \\ \hline
-    InfoCatGAN & 69.04 & 8.04 \\ \hline
-    C-InfoGAN & 77.65 & 7.55 \\ \hline
-    CatGAN(132 labels) & 96.05 & 127.92 \\ \hline
-    InfoCatGAN(132 labels, $\lambda_1 = 0.02$) & \textbf{98.15} & 169.72 \\ \hline
-    InfoCatGAN(132 labels, $\lambda_1 = 0.03$) & 80.43 & \textbf{6.59} \\ \hline
-    C-InfoGAN(132 labels) & 93.70 & 9.16 \\ \hline
+    \midrule
+    CatGAN & 64.41 & 236.75  \\ 
+    InfoCatGAN & 69.04 & 8.04 \\ 
+    C-InfoGAN & 77.65 & 7.55 \\ 
+    CatGAN(132 labels) & 96.05 & 127.92 \\ 
+    InfoCatGAN(132 labels, $\lambda_1 = 0.02$) & \textbf{98.15} & 169.72 \\
+    InfoCatGAN(132 labels, $\lambda_1 = 0.03$) & 80.43 & \textbf{6.59} \\
+    C-InfoGAN(132 labels) & 93.70 & 9.16 \\
+    \bottomrule
   \end{tabular}
 \end{table}
 
@@ -169,24 +181,6 @@
 
 FashionMNIST\citep{xiao2017/online}是一个类似MNIST的数据集，二者拥有同样的结构，图像大小，同样的类别数目。但是相对于MNIST，FashionMNIST拥有更复杂的图像结构，以及更难获得非常高的分类准确率，所以对模型更具有检验性。
 
-表~\ref{tab:fashion}给出了模型在FashionMNIST的数值结果，其中InfoCatGAN的正则系数$\lambda_1 = 0.03$。从表中可以看出，无论是在无监督还是半监督情况下，CatGAN的分类准确率都是比较高的，但从生成效果来看，它却是最差的。在无监督情况下，InfoCatGAN提高了生成图片的质量，但与此同时，牺牲了分类准确率，而C-InfoGAN在一定程度上二者兼顾，不仅生成质量最优，而且具有相对较高的分类准确率，此外其模型复杂度也较低。在半监督情况下，InfoCatGAN在两个方面均体现出优势，分类准确率达到了74.21\%，FID为$16.92$，生成效果见图~\ref{ffig:ss-icg}，这说明增加标签信息对模型的增益很大。
-
-\begin{table}[htbp]
-  \centering
-  \caption{FashionMNIST分类准确率对比}
-  \label{tab:fashion}
-  \begin{tabular}{|l|c|c|}
-    \hline
-    \textbf{模型} & \textbf{准确率（\%）} & \textbf{FID} \\
-    \hline
-    CatGAN & 64.28 & 120.04  \\ \hline
-    InfoCatGAN & 57.66 & 26.43 \\ \hline
-    C-InfoGAN & 60.50 & 15.97 \\ \hline
-    CatGAN(100 labels) & 73.34 & 119.16 \\ \hline
-    InfoCatGAN(100 labels) & \textbf{74.21} & 16.92 \\ \hline
-    C-InfoGAN(100 labels) & 68.94 & \textbf{15.94} \\ \hline
-  \end{tabular}
-\end{table}
 
 \begin{figure}[htbp]
   \centering
@@ -218,14 +212,35 @@ FashionMNIST\citep{xiao2017/online}是一个类似MNIST的数据集，二者拥�
     \label{ffig:ss-ig}
   \end{subfigure}
 
-  \caption{模型在FashionMNIST上的生成效果。在InfoCatGAN和C-InfoGAN的生成结果中，每一行对应隐变量$c$的一个取值，从0到9。}
+  \bicaption[模型在FashionMNIST上的生成效果]
+  {模型在FashionMNIST上的生成效果。在InfoCatGAN和C-InfoGAN的生成结果中，每一行对应隐变量$c$的一个取值，从0到9。}
+  {Generated images on FashionMNIST. Each row corresponds to a value of the categorical latent code $c$, from 0 to 9.}
   \label{fig:fashion}
 \end{figure}
 
 图~\ref{fig:fashion}中给出了所有模型的生成结果。值得一提的是，加入互信息约束后的半监督版本模型从上往下每一行都对应同一个类别，并且顺序和训练数据的真实标签正确对应（图~\ref{ffig:ss-icg}、\ref{ffig:ss-ig}）。这说明了隐变量正确绑定到类别特征，并且可以精准调控生成图片的类别。
 
+表~\ref{tab:fashion}给出了模型在FashionMNIST的数值结果，其中InfoCatGAN的正则系数$\lambda_1 = 0.03$。从表中可以看出，无论是在无监督还是半监督情况下，CatGAN的分类准确率都是比较高的，但从生成效果来看，它却是最差的。在无监督情况下，InfoCatGAN提高了生成图片的质量，但与此同时，牺牲了分类准确率，而C-InfoGAN在一定程度上二者兼顾，不仅生成质量最优，而且具有相对较高的分类准确率，此外其模型复杂度也较低。在半监督情况下，InfoCatGAN在两个方面均体现出优势，分类准确率达到了74.21\%，FID为$16.92$，生成效果见图~\ref{ffig:ss-icg}，这说明增加标签信息对模型的增益很大。
+\begin{table}[htbp]
+  \centering
+  \bicaption{FashionMNIST分类准确率对比}{Classification accuracy on FashionMNIST}
+  \label{tab:fashion}
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{模型} & \textbf{准确率（\%）} & \textbf{FID} \\
+    \midrule
+    CatGAN & 64.28 & 120.04  \\ 
+    InfoCatGAN & 57.66 & 26.43 \\ 
+    C-InfoGAN & 60.50 & 15.97 \\ 
+    CatGAN(100 labels) & 73.34 & 119.16 \\ 
+    InfoCatGAN(100 labels) & \textbf{74.21} & 16.92 \\ 
+    C-InfoGAN(100 labels) & 68.94 & \textbf{15.94} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
 \subsection{收敛速度分析}
-本文提出的两个模型在原理上都属于正则化生成对抗网络，因此相较于原先的两个模型CatGAN和InfoGAN，增加的计算复杂度很小。由于GAN的训练方式特殊，训练的过程是生成器和判别器的对抗，因此目前没有一个统一的评判收敛性的标准。针对InfoCatGAN和C-InfoGAN两种模型，本文分别用条件熵损失（即判别器输出的概率分布对应的熵）以及互信息损失（实际采用交叉熵估计，详见\ref{sec:cig-us}节）来作为模型收敛的佐证，见图~\ref{fig:convergence}。
+本文提出的两个模型在原理上都属于正则化生成对抗网络，因此相较于原先的两个模型CatGAN和InfoGAN，增加的计算复杂度很小。由于GAN的训练方式特殊，训练的过程是生成器和判别器的对抗，因此目前没有一个统一的评判收敛性的标准。针对InfoCatGAN和C-InfoGAN两种模型，本文分别用条件熵损失（即判别器输出的概率分布对应的熵）以及互信息损失（实际采用交叉熵估计，详见\ref{sec:c-infogan}节）来作为模型收敛的佐证，见图~\ref{fig:convergence}。
 \begin{figure}[htbp]
   \centering
   \begin{subfigure}[b]{\twof\textwidth}
@@ -241,3 +256,6 @@ FashionMNIST\citep{xiao2017/online}是一个类似MNIST的数据集，二者拥�
   \bicaption{模型在MNIST上的收敛速度}{Convergence speed on MNIST}
   \label{fig:convergence}
 \end{figure}
+
+\section{本章小结}
+本章分别给出了InfoCatGAN和C-InfoGAN在两个数据集MNIST和FashionMNIST上的实验结果。从结果来看，InfoCatGAN相比于CatGAN在图片生成质量上有很大的提升，分类准确率在多数情况下略优于CatGAN。该模型对正则化系数较为敏感，并且可以通过调节正则化系数达到生成质量和分类准确率之间的折中。C-InfoGAN具有良好的生成质量和可观的分类准确率，并且可以通过隐变量控制图片的局部细节。值得一提的是，两个模型均能通过隐变量控制生成图片的类别，这对数据增强具有很大的意义。

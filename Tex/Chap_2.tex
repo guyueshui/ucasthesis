@@ -1,12 +1,12 @@
 \chapter{预备知识}\label{chap:preliminaries}
+\section{引言}
+在开始介绍本文工作之前，首先需要了解一些背景知识。本章首先介绍什么是生成式模型和判别式模型，然后给出生成对抗网络的详细介绍及其数学模型，最后介绍InfoGAN和CatGAN模型。
 
-\section{生成对抗网络}\label{sec:gan}
-GAN的背景介绍应用等.
+\section{生成式模型和判别式模型}\label{sec:gm-dm}
+在介绍生成对抗网络之前，我们有必要了解两个概念：生成式模型（Generative Modeling, GM）和判别式模型（Discriminative Modeling，DM）。我们先用简单地一句话说明，接着再详细阐述它们区别。简而言之，生成式模型是针对数据的联合分布进行建模，而判别式模型则是针对数据的条件分布进行建模。
 
-\subsection{生成式模型和判别式模型}\label{sec:gm-dm}
-在介绍生成对抗网络之前，我们有必要了解两个概念：生成式模型（Generative Modeling, GM）和判别式模型（Discriminative Modeling，DM）。我们先用简单地一句话说明，接着再详细阐述它们区别。简而言之，生成式模型是针对联合分布进行建模，而判别式模型则针对条件分布进行建模。
-
-在一个基本的机器学习问题中，通常有输入$x \in \Set{X}$和输出$y \in \Set{Y}$两个部分。简单来说DM关注于$x$和$y$的内在关系，或者说在给定某个$x$的情况下所对应的$y$应该满足什么样的规律或分布；而GM更关注于$(x, y)$的联合分布。模型训练完成之后，判别式模型将训练数据集的信息提取，模型本身拟合了训练样本中的经验条件分布$P(y|x)$，因此对于测试样本$x^*$，判别式模型直接输出对应的条件概率$P(y^* | x^*)$，给出分类结果。生成式模型则对训练集的联合分布$P(x,y)$进行建模，对于未见样本$x^*$，选择使得$P(x^*, y)$最大的$y$作为预测值。由贝叶斯公式知
+在一个基本的机器学习问题中，通常有输入$x \in \Set{X}$和输出$y \in \Set{Y}$两个部分。通俗的说，DM关注$x$和$y$的内在联系，即在给定$x$的条件下，$y$的分布应该满足什么样的性质；
+而GM更关注于$(x, y)$的联合分布。模型训练完成之后，判别式模型将训练数据集的信息提取，模型本身拟合了训练样本中的经验条件分布$P(y|x)$，因此对于测试样本$x^*$，判别式模型直接输出对应的条件概率$P(y^* | x^*)$，给出分类结果。生成式模型则对训练集的联合分布$P(x,y)$进行建模，对于未见样本$x^*$，选择使得$P(x^*, y)$最大的$y$作为预测值。由贝叶斯公式知
 \[
   \begin{split}
     y^{*} &= \argmax_y P(y|x^{*}) \\
@@ -17,14 +17,19 @@ GAN的背景介绍应用等.
 \]
 因此，这等价于寻找使得$P(y|x^*)$最大的$y$作为预测值。
 
-常见的生成式模型有：朴素贝叶斯（Naive Bayes）、隐马尔可夫模型（Hidden Markov Model, HMM）、高斯混合模型（Gaussian Mixture Model，GMM）、受限玻尔兹曼机（Restricted Boltzmann Machine，RBM）；常见的判别式模型有：KNN（K-Nearest Neighbours）、感知机（Perceptrons）、决策树（Decision Tree）、逻辑回归（Logistic Regression）、最大熵模型（Maximum Entropy Model）、支撑向量机（SVM）、条件随机场（Conditional Random Field）、神经网络（Neural Networks）等。在实际使用中，两者各有优劣。生成式模型可以建模联合分布，但联合分布本身难以估计，所以会需要较大地数据量和计算量。判别式模型具有更低地渐近误差，但其收敛到渐近误差的速度比生成式模型更慢；而生成时模型的渐近误差往往高于判别式模型\citep{ng2002discriminative}，而且可以处理隐变量和半监督甚至无监督学习。
+常见的生成式模型有：朴素贝叶斯、隐马尔可夫模型（Hidden Markov Model, HMM）、高斯混合模型（Gaussian Mixture Model，GMM）、受限玻尔兹曼机（Restricted Boltzmann Machine，RBM）；常见的判别式模型有：KNN（K-Nearest Neighbours）、感知机（Perceptrons）、决策树（Decision Tree）、逻辑回归（Logistic Regression）、最大熵模型（Maximum Entropy Model）、支撑向量机（Support Vector Machine, SVM）、条件随机场（Conditional Random Field）、神经网络（Neural Networks）等。
+在实际使用中，两者各有优劣。生成式模型可以建模联合分布，但联合分布本身难以估计，所以会需要较大地数据量和计算量。判别式模型具有更低地渐近误差，但其收敛到渐近误差的速度比生成式模型更慢；而生成时模型的渐近误差往往高于判别式模型\citep{ng2002discriminative}，而且可以处理隐变量和半监督甚至无监督学习。
 
 
 %一般来说，判别式模型比生成式模型更受欢迎，特别是在分类问题中，判别式模型直接建模$P(y|x)$进行分类，而生成式模型则先建模$P(x,y)$然后再计算$P(y|x)$进行分类。首先联合概率的估计本身比较困难，因此需要耗费更多的数据量和计算资源。
 
 
+\section{生成对抗网络}
 \subsection{基本思想}
-\citet{goodfellow2014generative}在2014年提出生成对抗网络（Generative Adversarial Networks, GAN），该模型使用博弈理论中的minimax博弈机制来训练两个模块--生成器和判别器。其目标是学习一个生成器对应的分布$P_g$使得它和真实数据的分布$P_{\text{data}}$尽量接近。生成式模型不直接估计每个数据样本的概率，而是利用生成网络$G$将噪声变量$\bd{z} \sim P_z(\bd{z})$映射到虚假样本$G(\bd{z})$。在训练过程中，判别器的目标是将虚假样本和真实样本区分开，生成器的目标则是生成让判别器无法区分的虚假样本。训练过程可以类比为两个玩家博弈：判别器读取一个数据希望能够分别真假，而生成器希望生成以假乱真的数据从而让判别器判定为真。 整个过程大致如下：生成器将一个随机噪声映射到数据空间，形成一个虚假数据。判别器接受真实样本或虚假样本作为输入，并输出当前样本来自真实数据的概率。训练的目标是一方面让判别器能够区分真假，一方面使生成器能够以假乱真，这就形成了两方对抗，最终二者的能力越来越强，无法进一步提高自己的性能，博弈达到平衡点。
+\citet{goodfellow2014generative}在2014年提出生成对抗网络（Generative Adversarial Networks, GAN），该模型使用博弈理论中的minimax博弈机制来训练两个模块：生成器和判别器。
+%其目标是学习一个生成器对应的分布$p_g$使得它和真实数据的分布$p_{\text{data}}$尽量接近。
+其目标是通过对抗训练使得生成器对应的分布$p_g$和真实数据的分布$p_{\text{data}}$尽量接近。
+生成式模型不直接估计每个数据样本的概率，而是利用生成网络$G$将噪声变量$\bd{z} \sim p_z(\bd{z})$映射到虚假样本$G(\bd{z})$。在训练过程中，判别器的目标是将虚假样本和真实样本区分开，生成器的目标则是生成让判别器无法区分的虚假样本。训练过程可以类比为两个玩家博弈：判别器读取一个数据希望能够分别真假，而生成器希望生成以假乱真的数据从而让判别器判定为真。 整个过程大致如下：生成器将一个随机噪声映射到数据空间，形成一个虚假数据。判别器接受真实样本或虚假样本作为输入，并输出当前样本来自真实数据的概率。训练的目标是一方面让判别器能够区分真假，一方面使生成器能够以假乱真，这就形成了两方对抗，最终二者的能力越来越强，无法进一步提高自己的性能，博弈达到平衡点。
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.9\textwidth]{Img/arch-gan.pdf}
@@ -46,12 +51,12 @@ GAN的背景介绍应用等.
 %----------------------------------------------------------------------
 \section{InfoGAN}\label{sec:infogan}
 \subsection{基本思想}
-朴素GAN通常使用高维高斯噪声作为生成器的输入，并没有规定生成器如何利用这个噪声，也没有对隐空间作任何限制。因此，噪声的利用可以是任意的，生成器可能生成具有高度耦合特征的数据。这从图像上来看，也就是模型生成的虚假图片高度抽象，没有明显轮廓。从底层来看，$\bd{z}$的每一维度并没有对应到生成数据的某个特征。然而，一个好的模型很自然地可以将数据的各个特征分离出来，以提供给用户调整。比如，当要求GAN从MNIST\citep{lecun1989backpropagation}生成图片时，理想的模型可以通过一个离散随机变量来表示数字类别特征（0-9），通过两个连续随机变量来分别表示数字的角度和笔画的粗细。
+朴素GAN通常使用高维高斯噪声作为生成器的输入，并没有规定生成器如何利用这个噪声，也没有对隐空间作任何限制。因此，噪声的利用可以是任意的，生成器可能生成具有高度耦合特征的数据。这从图像上来看，也就是模型生成的虚假图片高度抽象，没有明显轮廓。从底层来看，$\bd{z}$的每一维度并没有对应到生成数据的某个特征。然而，一个好的模型很自然地可以将数据的各个特征分离出来，以提供给用户调整。比如，当要求GAN从MNIST\citep{lecun1989backpropagation}生成图片时，理想的模型可以利用一个离散随机变量来表示数字类别特征（0-9），利用两个连续随机变量来分别表示数字的角度和笔画的粗细。
 
 \citet{mirza2014conditional,odena2017conditional,miyato2018cgans}均指出通过调整隐空间结构，可以控制生成器生成具有某个特征的图片。InfoGAN\citep{chen2016infogan}将隐变量分解为两部分，一部分仍然是无结构的噪声$\bd{z} \sim p_z$，为模型提供足够的容量；另一部分则作为隐变量$\bd{c} \sim p_c$，用于学习数据特征。
 
 \subsection{互信息约束}
-设$\bd{c} = (c_1, c_2, \cdots, c_L)$表示输入空间中的$L$个隐变量，最简单的情况是各隐变量之间互相独立，即$P_{\bd{c}}(c_1, c_2, \cdots, c_L) = \prod_{i=1}^L P_{c_i}(c_i)$。InfoGAN基于朴素GAN模型提出了一种在无监督条件下，利用隐变量学习到数据特征的方法。该方法将隐空间噪声分解为两部分，包含一个生成器$G(\bd{z}, \bd{c})$和一个判别器$D$。由于在朴素GAN中，生成器可以忽略隐空间结构，此时$P_g(x|c) = P_g(x)$，其中$P_g$为生成器对应的概率分布。为了解决这个问题，InfoGAN为模型增加了互信息正则项，指出隐变量$\bd{c}$和生成器的输出$G(\bd{z}, \bd{c})$之间的互信息应该很高。
+设$\bd{c} = (c_1, c_2, \cdots, c_L)$表示输入空间中的$L$个隐变量，最简单的情况是各隐变量之间互相独立，即$p_{\bd{c}}(c_1, c_2, \cdots, c_L) = \prod_{i=1}^L p_{c_i}(c_i)$。InfoGAN基于朴素GAN模型提出了一种在无监督条件下，利用隐变量学习到数据特征的方法。该方法将隐空间噪声分解为两部分，包含一个生成器$G(\bd{z}, \bd{c})$和一个判别器$D$。由于在朴素GAN中，生成器可以忽略隐空间结构，此时$p_g(x|c) = p_g(x)$，其中$p_g$为生成器对应的概率分布。为了解决这个问题，InfoGAN为模型增加了互信息正则项，并指出隐变量$\bd{c}$和生成数据$G(\bd{z}, \bd{c})$之间的互信息应该很高。
 \begin{figure}[hbtp]
   \centering
   \includegraphics[width=0.75\textwidth]{Img/arch-infogan.pdf}
@@ -59,7 +64,7 @@ GAN的背景介绍应用等.
   \label{fig:arch-infogan}
 \end{figure}
 
-在信息论中，熵、相对熵和互信息的定义如下\citep{cover2012elements}：
+在信息论中，熵、相对熵以及互信息的定义如下\citep{cover2012elements}：
 \begin{definition}{熵}
   设有离散随机变量$X \sim p_X(x)$及其支撑集$\Set{X}$，则它的熵$H(X)$定义为
   \begin{equation}
@@ -90,14 +95,14 @@ GAN的背景介绍应用等.
   \label{def:mutual-information}
 \end{definition}
 
-在信息论中，熵是不确定性的度量。由上述定义，容易得到
+在信息论中，随机变量的熵是其不确定性的度量。由以上定义，容易得到
 \begin{equation}
   \begin{split}
     I(X;~Y) &= H(X) - H(X|Y) \\
     &= H(Y) - H(Y|X).
   \end{split}
 \end{equation}
-可知随机变量$X,~Y$的互信息度量着观测到$Y$之后，$X$的不确定性的减少量。从\eqref{eq:mutual-information}式可以看出，互信息越大表明两个随机变量之间的关系越紧密，反之互信息为零则说明变量间相互独立。于是，最大化隐变量$\bd{c}$和生成器输出$\tilde{\bd{x}} = G(\bd{z}, \bd{c})$的互信息$I(\bd{c}; ~\tilde{\bd{x}}) = H(\bd{c}) - H(\bd{c}|\tilde{\bd{x}})$等价于最小化$H(\bd{c}|\tilde{\bd{x}})$，这里由于$\bd{c}$的分布在整个过程中是确定的，所以$H(\bd{c})$可以视为常数。换句话说，隐变量$\bd{c}$的信息量在生成过程中应该流向$\tilde{\bd{x}}$，即给定$\tilde{\bd{x}}$之后，$\bd{c}$的信息量应该很小。类似的互信息约束也可以应用到聚类中\citep{bridle1992unsupervised,barber2006kernelized,krause2010discriminative}。InfoGAN在朴素GAN的基础上增加了互信息约束，其价值函数$V_I(D,G)$如下：
+可知随机变量$X,~Y$的互信息度量着观测到$Y$之后，$X$的不确定性的减少量。从\eqref{eq:mutual-information}式可以看出，互信息越大表明两个随机变量之间的相关性越大，反之互信息为零则说明变量间相互独立。于是，最大化隐变量$\bd{c}$和生成器输出$\tilde{\bd{x}} = G(\bd{z}, \bd{c})$的互信息$I(\bd{c}; ~\tilde{\bd{x}}) = H(\bd{c}) - H(\bd{c}|\tilde{\bd{x}})$等价于最小化$H(\bd{c}|\tilde{\bd{x}})$，这里由于$\bd{c}$的分布在整个过程中是确定的，所以$H(\bd{c})$可以视为常数。换句话说，隐变量$\bd{c}$的信息量在生成过程中应该流向$\tilde{\bd{x}}$，即给定$\tilde{\bd{x}}$之后，$\bd{c}$的信息量应该很小。类似的互信息约束也可以应用到聚类中\citep{bridle1992unsupervised,barber2006kernelized,krause2010discriminative}。InfoGAN在朴素GAN的基础上增加了互信息约束，其价值函数$V_I(D,G)$如下：
 \begin{equation}
   \min_G\max_D ~V_I(D,G) = V(D,G) - \lambda I(\bd{c};~G(\bd{z},\bd{c})).
 \end{equation}
@@ -164,9 +169,9 @@ GAN的背景介绍应用等.
 基于以上陈述，CatGAN提出了一种新的生成对抗网络结构来作无监督和半监督学习。首先考虑无监督的设定，无监督条件下的结构是针对朴素GAN的推广。
 
 \subsection{问题建模}\label{sec:catgan-ps}
-如前所述，设$\Set{X} = \{\bd{x}_1, \cdots, \bd{x}_N\}$为$N$个无标注数据样本。考虑以无监督的方式，从数据$\Set{X}$学习一个判别器$D$，使得$D$将给定数据划分到事先确定好的$K$个类别之一。进一步地，我们要求$D(\bd{x})$给出$\bd{x}$属于每个类别的概率：$\sum_{k=1}^K \Pr(y=k|\bd{x}) = 1$。CatGAN的目标是训练这样一个概率分类器，使其在分配概率时满足某种要求。注意到真实的标签分布是未知的，无法直接最大化对数似然函数，所以CatGAN了设计一个鉴定分类器性能的度量方式。具体说来，如果对于给定样本$\bd{x}$，$D$输出的条件分布$p(y|\bd{x})$具有很高的确定性，而边缘分布$p(y)$对于所有$k \in \{1,2,\cdots,K\} \triangleq [K]$都接近某个先验分布$P(y)$。在整个推导过程中，CatGAN假设标签的先验分布$P(y)$为类别均匀分布，也就是说$\Set{X}$中每个类别的样本数量大致相等：$\forall k_1, ~k_2 \in [K], ~\Pr(y=k_1) = \Pr(y=k_2)$。
+如前所述，设$\Set{X} = \{\bd{x}_1, \cdots, \bd{x}_N\}$为$N$个无标注数据样本。考虑以无监督的方式，从数据$\Set{X}$学习一个判别器$D$，使得$D$将给定数据划分到事先确定好的$K$个类别之一。进一步地，我们要求$D(\bd{x})$给出$\bd{x}$属于每个类别的概率：$\sum_{k=1}^K \Pr(y=k|\bd{x}) = 1$。CatGAN的目标是训练这样一个概率分类器，使其在分配概率时满足某种要求。注意到真实的标签分布是未知的，无法直接最大化对数似然函数，所以CatGAN了设计一个鉴定分类器性能的度量方式。具体说来，如果对于给定样本$\bd{x}$，$D$输出的条件分布$p(y|\bd{x})$具有很高的确定性，而边缘分布$p(y)$对于所有$k \in \{1,2,\cdots,K\} \triangleq [K]$都接近某个先验分布$p_Y$。在整个推导过程中，CatGAN假设标签的先验分布$p_Y$为类别均匀分布，也就是说$\Set{X}$中每个类别的样本数量大致相等：$\forall k_1, ~k_2 \in [K], ~\Pr(y=k_1) = \Pr(y=k_2)$。
 
-上述问题的建模可以自然联想到软聚类问题，所以理论上来说可以用概率聚类算法如：Regularized information maximization (RIM) \citep{krause2010discriminative}，或者最小化相对熵\citep{grandvalet2005semi}。然而这些方法都容易对数据集中的一些虚假相关性产生过拟合。第二个直观感觉朴素GAN的结构无法直接用来解决这个问题，因为朴素GAN的判别器只能输出一个概率以判断真假，而不能判断输入到底来自哪个类别。原则上，我们希望一个分类器可以建模数据分布，同时学习到数据特征加以利用进行下一步操作，比如判别式聚类。然而，判别器并不一定只能区分真假（二分类），它也应该能够将输入分配到多个类别。
+上述问题的建模可以自然联想到软聚类问题，所以理论上来说可以用概率聚类算法如：Regularized information maximization (RIM) \citep{krause2010discriminative}，或者最小化相对熵\citep{grandvalet2005semi}。然而这些方法都容易对数据集中的一些虚假相关性产生过拟合。第二个直观感觉是朴素GAN的结构无法直接用来解决这个问题，因为朴素GAN的判别器只能输出一个概率以判断真假，而不能判断输入到底来自哪个类别。原则上，我们希望一个分类器可以建模数据分布，同时学习到数据特征加以利用进行下一步操作，比如判别式聚类。然而，判别器并不一定只能区分真假（二分类），它也应该能够将输入分配到多个类别。
 
 尽管可能存在一些问题，但是一个非常简单的做法是将朴素GAN结构扩展一下使得判别器可被用于多分类任务。一旦$D$的结构改变，那么朴素GAN模型的对抗机制则需要重新设计。CatGAN将博弈机制改变为：要求判别器将每个真实数据样本划分到$K$个类别中的一个，而对于虚假样本，保持一个较高的不确定性。这样可以让分类器更加鲁棒。类似地，要求生成器生成具体到某个类别的图片而不是仅仅生成和真实数据类似的图片。
 
@@ -183,10 +188,10 @@ GAN的背景介绍应用等.
 
 \begin{figure}[hbtp]
   \centering
-  \includegraphics[width=1.0\textwidth]{Img/arch-catgan.png}
+  \includegraphics[width=0.9\textwidth]{Img/arch-catgan.png}
   \bicaption[CatGAN结构示意]
-  {左图为CatGAN结构示意，绿色为生成器，紫色为判别器。右图为CatGAN目标函数的直观解释。给定真实样本，判别器的输出呈单峰分布；给定虚假样本，判别器的输出呈均匀分布；对于所有真实图片，标签$y$的边缘分布呈均匀分布。}
-  {The architecture of CatGAN is shown on the left, where generator is green and discriminator is violet. A sketch of the three parts (i) - (iii) of the objective function $L_D^{cat}$ for the discriminator (right). To obtain certain predictions the discriminator minimizes the entropy of $p(y|\bd{x})$, leading to a peaked conditional class distribution. To obtain uncertain predictions for generated samples the the entropy of $p(y|G(\bd{z}))$ is maximized which, in the limit, would result in a uniform distribution. Finally, maximizing the marginal class entropy over all data-points leads to uniform usage of all classes.}
+  {左图为CatGAN结构示意，绿色为生成器，紫色为判别器。右图为CatGAN判别器目标$L_D^{cat}$的直观解释。给定真实样本，判别器的输出呈单峰分布；给定虚假样本，判别器的输出呈均匀分布；对于所有真实图片，标签$y$的边缘分布呈均匀分布。}
+  {The architecture of CatGAN is shown on the left, where generator is green and discriminator is violet. An intuitive interpretation of the objective function $L_D^{cat}$ for the discriminator is shown on right. For real samples, miminizing $H(p(y|\mathbf{x}))$ leads to single peak distribution; for fake samples, maximizing $H(p(y|G(\mathbf{z})))$ leads to uniform distribution. Finally, maximizing the marginal class entropy over all data-points leads to uniform usage of all classes.}
   \label{fig:arch-catgan}
 \end{figure}
 
@@ -235,7 +240,7 @@ CatGAN将这些要求都转化为可优化的条件概率，以此设计出目�
 以上给出的目标函数满足所有的设计要求，并且具有一定的可解释性：\eqref{eq:catgan-obj}式中$L_D^{cat}$的前两项可以合并为$I(p_{\text{data}};~p(y))$，其中$p(y)$预测标签分布。也就是说，判别器在最大化真实数据分布和预测标签分布之间的互信息，同时最小化虚假样本分布和预测标签分布之间的互信息。同理，对于$L_G^{cat}$前两项也可以合并为虚假样本和预测分布之间的互信息，这说明生成器想要最大化$I(p_g; ~p(y))$。很多判别式分类模型如感知机、逻辑回归等，都可以用信息论的角度解释为优化数据和标签之间的互信息，提取数据和标签相关的部分，寻找使得$\Pr(y|\theta(x)) = \Pr(y|x)$的充分统计量$\theta(x)$，作为模型所提取到的特征。这里，CatGAN也具有类似的可解释性。
 
 \subsection{半监督学习}\label{sec:ss-catgan}
-如果拥有少量标签信息，CatGAN就可以扩展到半监督学习模型，此时模型的性能可以达到进一步提升。考虑\ref{sec:catgan-ps}节所描述的问题，现在在原有的$N$个无标注数据样本上，额外增加$L$个带标签的数据$\Set{X}^{\ell} = \{(\bd{x}_1, \bd{y}_1), \ldots, (\bd{x}_L, \bd{y}_L)\}$，其中$\bd{y}_i \in \reals^K$为经过one-hot编码之后的标签向量。通过计算预测标签分布$p(y|\bd{x})$和$\Set{X}^{\ell}$上的真实标签分布之间的交叉熵，可以将这些有标签数据整合进\eqref{eq:catgan-obj}式中。给定一组$(\bd{x}, \bd{y})$，则预测标签分布和真实分布之间的交叉熵具有如下形式：
+如果拥有少量标签信息，CatGAN就可以扩展到半监督学习模型，此时模型的性能可以达到进一步提升。考虑\ref{sec:catgan-ps}节所描述的问题，现在在原有的$N$个无标注数据样本上，额外增加$L$个带标签的数据$\Set{L} = \{\bd{x}_i, y_i\}_{i=1}^L$，使用$\bd{y}_i \in \reals^K$表示标签$y_i$经过one-hot编码之后的标签向量，即若$y_i = k$，则$\bd{y}_{ik} = 1$且对任意$j \neq k,~\bd{y}_{ij} = 0$。通过计算预测标签分布$p(y|\bd{x})$和$\Set{L}$上的真实标签分布之间的交叉熵，可以将这些有标签数据整合进\eqref{eq:catgan-obj}式中。给定一组$(\bd{x}, \bd{y})$，则预测标签分布和真实分布之间的交叉熵具有如下形式：
 \begin{equation}
   \CE[\bd{y}, p(y|\bd{x})] = -\sum_{i=1}^K y_i \log\Pr(y=y_i|\bd{x}),
   \label{eq:cross-ent}
@@ -243,7 +248,7 @@ CatGAN将这些要求都转化为可优化的条件概率，以此设计出目�
 其中$y_i$是标签向量$\bd{y}$的第$i$个分量。综上所述，可知半监督版本的CatGAN目标函数$L_D^{sscat}$和$L_G^{sscat}$具有如下形式：
 \begin{equation}
   \begin{split}
-    L_D^{sscat} &= L_D^{cat} + \lambda\E_{(\bd{x},\bd{y}) \sim \Set{X}^{\ell}}
+    L_D^{sscat} &= L_D^{cat} + \lambda\E_{(\bd{x},\bd{y}) \in \Set{L}}
     \left[ \CE[\bd{y}, p(y|\bd{x})] \right], \\
     L_G^{sscat} &= L_G^{cat}, 
   \end{split}
@@ -252,7 +257,7 @@ CatGAN将这些要求都转化为可优化的条件概率，以此设计出目�
 其中$\lambda$为正则化系数。
 
 \section{本章小结}
-本章介绍了生成对抗网络的基本思想及其数学模型。接着详细阐述了两种GAN的变体：InfoGAN和CatGAN。其中InfoGAN将噪声空间分解为无意义的噪声和有意义的隐变量，通过加入互信息正则项可以让隐变量学习到数据特征，并可以通过隐变量控制生成器的输出，为本文后续工作做了良好的铺垫。CatGAN则对判别器进行扩展，将朴素GAN模型中的二分类判别器扩展为多分类判别器，并利用判别器做无监督和半监督的多分类任务。
+本章介绍了生成对抗网络的基本思想及其数学模型。接着详细阐述了两种GAN的变体：InfoGAN和CatGAN。其中InfoGAN将噪声空间分解为无意义的噪声和有意义的隐变量，通过加入互信息正则项可以让隐变量学习到数据特征，并可以通过隐变量控制生成器的输出，为本文后续工作做了良好的铺垫。CatGAN则对朴素GAN中的判别器进行扩展，将原来的二分类扩展为多分类判别器，并利用判别器做无监督和半监督的多分类任务。
 
 
 % \section{GAN 的研究展望}
