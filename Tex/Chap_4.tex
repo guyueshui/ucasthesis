@@ -150,7 +150,7 @@
   \label{fig:mnist}
 \end{figure}
 
-表~\ref{tab:cat}给出了无监督和半监督情况下的分类准确率\footnote{表中有关CatGAN的数据来自与本文复现的结果，与\citet{springenberg2015unsupervised}有所差距。经过多次尝试，我们仍无法完美复现出原文中的结果。}。从表中看出，在无监督的情况下InfoCatGAN的分类准确率相较于CatGAN有所提升，而FID从236.75降低到8.04，图片生成质量有了极大的提升，见图~\ref{ffig:m-icg}。在半监督的情况下，CatGAN的准确率达到了96.05\%，而InfoCatGAN随着正则化系数$\lambda_1$的变化呈现出不同的效果。当系数较小时，分类准确率较高，但生成图片的质量非常差；当系数较大时，生成的图片效果很好，但分类准确率有所降低。实验发现通过调节参数$\lambda_1$，可以实现生成效果和分类准确率之间的折中。实验使用的默认值是$\lambda_1 = 1.1$，
+表~\ref{tab:cat}给出了无监督和半监督情况下的分类准确率\footnote{表中有关CatGAN的数据来自与本文复现的结果，与\citet{springenberg2015unsupervised}有所差距。}。从表中看出，在无监督的情况下InfoCatGAN的分类准确率相较于CatGAN有所提升，而FID从236.75降低到8.04，图片生成质量有了极大的提升，见图~\ref{ffig:m-icg}。在半监督的情况下，CatGAN的准确率达到了96.05\%，而InfoCatGAN随着正则化系数$\lambda_1$的变化呈现出不同的效果。当系数较小时，分类准确率较高，但生成图片的质量非常差；当系数较大时，生成的图片效果很好，但分类准确率有所降低。实验发现通过调节参数$\lambda_1$，可以实现生成效果和分类准确率之间的折中。实验使用的默认值是$\lambda_1 = 1.1$，
 当$\lambda_1$减小时，生成图片的质量开始下降，同时分类准确率也会相应增加。值得注意的是，$\lambda_1$越小并不意味着分类准确率越高。当$\lambda_1=0$时，InfoCatGAN退化为CatGAN；而从表~\ref{tab:cat}可以看出，当$\lambda_1=0.02$时，InfoCatGAN的分类准确率高于CatGAN，达到98.15\%。
 
 \begin{table}[htbp]
@@ -250,7 +250,7 @@ FashionMNIST\citep{xiao2017/online}是一个类似MNIST的数据集，二者拥�
   \end{subfigure}
   \begin{subfigure}[b]{\twof\textwidth}
     \includegraphics[width=\textwidth]{Img/cig-convergence.pdf}
-    \caption{Mutual information loss of InfoGAN and C-InfoGAN}
+    \caption{MI loss of InfoGAN and C-InfoGAN}
     \label{ffig:cig-convergence}
   \end{subfigure}
   \bicaption{模型在MNIST上的收敛速度}{Convergence speed on MNIST}
