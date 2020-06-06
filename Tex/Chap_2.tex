@@ -17,7 +17,7 @@
 \]
 因此，这等价于寻找使得$P(y|x^{\star})$最大的$y$作为预测值。
 
-常见的生成式模型有：朴素贝叶斯（Naive Bayes）、高斯混合模型（Gaussian Mixture Model，GMM）、受限玻尔兹曼机（Restricted Boltzmann Machine，RBM）；常见的判别式模型有：KNN（K-Nearest Neighbours）、逻辑回归（Logistic Regression）、感知机（Perceptrons）、决策树（Decision Tree）、条件随机场（Conditional Random Field）等。
+常见的生成式模型有：高斯混合模型、受限玻尔兹曼机；常见的判别式模型有：KNN（K-Nearest Neighbours）、逻辑回归（Logistic Regression）、感知机（Perceptrons）等。
 在实际使用中，两者各有优劣。生成式模型可以建模联合分布，但联合分布本身难以估计，所以会需要较大地数据量和计算量。判别式模型具有更低地渐近误差，但其收敛到渐近误差的速度比生成式模型更慢；而生成时模型的渐近误差往往高于判别式模型\citep{ng2002discriminative}，而且可以处理隐变量和半监督甚至无监督学习。
 
 
@@ -28,7 +28,7 @@
 \subsection{基本思想}
 \citet{goodfellow2014generative}在2014年提出生成对抗网络，该模型使用博弈理论中的minimax博弈机制来训练两个模块：生成器和判别器。
 %其目标是学习一个生成器对应的分布$p_g$使得它和真实数据的分布$p_{\text{data}}$尽量接近。
-其目标时通过交替更新生成器和判别器，通过二者的对抗使得生成器学习到真实的数据分布，即令生成器对应的分布$p_g$和真实数据的分布$p_{\text{data}}$尽量接近。
+模型的训练目标是，通过交替更新生成器和判别器，在二者的博弈下使得生成器学习到真实的数据分布，也就是说，令生成器对应的分布$p_g$和真实数据的分布$p_{\text{data}}$尽量接近。
 生成式模型不直接估计每个数据样本的概率，而是利用生成网络$G$将噪声变量$\bd{z} \sim p_z(\bd{z})$映射到虚假样本$G(\bd{z})$。在训练过程中，判别器的目标是将虚假样本和真实样本区分开，生成器的目标则是生成让判别器无法区分的虚假样本。训练过程可以类比为两个玩家博弈：判别器读取一个数据希望能够分判定其是否为真实样本，而生成器希望生成以假乱真的数据从而让判别器判定为真。整个过程大致如下：生成器将一个随机噪声映射到数据空间，形成一个虚假数据。判别器接受真实样本或虚假样本作为输入，并输出当前样本来自真实数据的概率。训练的目标是一方面让判别器能够区分真假，一方面使生成器能够以假乱真，这就形成了两方对抗，最终二者的能力越来越强，无法进一步提高自己的性能，博弈达到平衡点。
 \begin{figure}[htbp]
   \centering
@@ -46,7 +46,7 @@
   \label{eq:gan-obj}
 \end{equation}
 
-在实际应用中，GAN通常被实现为可微神经网络：生成器网络$G(\cdot; {\theta}_g)$和判别器网络$D(\cdot; {\theta}_d)$，其中${\theta}_g$和${\theta}_d$分别为生成器和判别器的网络参数\footnote{为了简便起见，在不产生歧义的情况下通常省略网络参数。}。此外，生成器和判别器在实现中也需要采用交替迭代的机制，使用基于梯度的优化方法来训练。在训练初期，$G$生成的加虚假样本比较容易被$D$识别，从\eqref{eq:gan-obj}式可以看出，$\log(1 - D(G(\bd{z})))$的梯度变化很小，生成器难以得到优化。因此，在实现中通常训练$G$使得$\log D(G(\bd{z}))$达到最大。
+在实际应用中，GAN通常被实现为可微神经网络：生成器网络$G(\cdot; {\theta}_g)$和判别器网络$D(\cdot; {\theta}_d)$，其中${\theta}_g$和${\theta}_d$分别为生成器和判别器的网络参数\footnote{为了描述方便，通常在没有歧义的情况下省略网络参数。}。此外，生成器和判别器在实现中也需要采用交替迭代的机制，使用基于梯度的优化方法来训练。在训练初期，$G$生成的加虚假样本比较容易被$D$识别，从\eqref{eq:gan-obj}式可以看出，$\log(1 - D(G(\bd{z})))$的梯度变化很小，生成器难以得到优化。因此，在实现中通常训练$G$使得$\log D(G(\bd{z}))$达到最大。
 
 %----------------------------------------------------------------------
 \section{InfoGAN}\label{sec:infogan}
@@ -64,7 +64,7 @@
   \label{fig:arch-infogan}
 \end{figure}
 
-在信息论中，熵（Entropy）、相对熵（Relative Entropy）以及互信息（Mutual Information）的定义如下\citep{cover2012elements}：
+在信息论中，熵（Entropy）是信息量的度量，相对熵（Relative Entropy）和互信息（Mutual Information）均为两个分布之间的关系度量，它们的定义如下\citep{cover2012elements}：
 \begin{definition}{熵}
   设有离散随机变量$X \sim p_X(x)$及其支撑集$\Set{X}$，则它的熵$H(X)$定义为
   \begin{equation}
@@ -80,7 +80,7 @@
   \label{def:relative-entropy}
 \end{definition}
 \begin{definition}{互信息}
-  设$X,~Y$是两个离散随机变量，它们的支撑集分别为$\Set{X},~\Set{Y}$，它们的联合分布为$p_{X,Y}(x, y)$，边缘分布分别为$p_X(x)$和$p_Y(y)$，则$X$和$Y$之间的互信息$I(X;~Y)$定义为它们联合分布和边缘分布乘积之间的相对熵：
+  设随机变量$X$的支撑集为$\Set{X}$，随机变量$Y$支撑集为$\Set{Y}$，它们的联合分布为$p_{X,Y}(x, y)$，边缘分布分别为$p_X(x)$和$p_Y(y)$，则$X$和$Y$之间的互信息：
   \begin{equation}
     \begin{split}
       I(X;~Y) &= \sum_{x\in\Set{X}}\sum_{y\in\Set{Y}} 
@@ -95,7 +95,7 @@
   \label{def:mutual-information}
 \end{definition}
 
-在信息论中，熵度量着随机变量的其不确定性，用来衡量它所持有的信息量。由以上定义，容易得到
+在信息论中，熵是随机变量不确定性的度量，用来衡量它所持有的信息量。由以上定义，容易得到
 \begin{equation}
   \begin{split}
     I(X;~Y) &= H(X) - H(X|Y) \\
@@ -191,7 +191,7 @@
   \includegraphics[width=0.9\textwidth]{Img/arch-catgan.png}
   \bicaption[CatGAN结构示意]
   {左图为CatGAN结构示意，绿色为生成器，紫色为判别器。右图为CatGAN判别器目标$L_D^{cat}$的直观解释。给定真实样本，判别器的输出呈单峰分布；给定虚假样本，判别器的输出呈均匀分布；对于所有真实图片，标签$y$的边缘分布呈均匀分布。}
-  {The architecture of CatGAN is shown on the left, where generator is green and discriminator is violet. An intuitive interpretation of the objective function $L_D^{cat}$ for the discriminator is shown on right. For real samples, miminizing $H(p(y|\mathbf{x}))$ leads to single peak distribution; for fake samples, maximizing $H(p(y|G(\mathbf{z})))$ leads to uniform distribution. Finally, maximizing the marginal class entropy over all data-points leads to uniform usage of all classes.}
+  {The architecture of CatGAN is shown on the left, where generator is green and discriminator is violet. An intuitive interpretation $L_D^{cat}$ for the discriminator is shown on right. For real samples, miminizing $H(p(y|\mathbf{x}))$ leads to single peak distribution; for fake samples, maximizing $H(p(y|G(\mathbf{z})))$ leads to uniform distribution. Finally, maximizing the marginal class entropy over all data-points leads to uniform usage of all classes.}
   \label{fig:arch-catgan}
 \end{figure}
 

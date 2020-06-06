@@ -100,9 +100,11 @@ InfoGAN通过引入互信息约束探究了隐空间和数据空间的联系，�
 \end{equation}
 其中$\lambda_3$为正则化系数，模型结构参见图~\ref{fig:c-infogan}。
 
-算法~\ref{alg:ss-cig}给出了半监督版本的C-InfoGAN的训练步骤，其中$\theta_g, ~\theta_d, ~\theta_g$分别为$G, ~D$和$Q$的网络参数。可以看到，在第\ref{ln:bid}行我们直接将有标签数据放入$Q$网络中训练，通过$Q$网络让标签信息流入虚假标签。在这种情况下，训练稳定之后绑定到类别的隐变量能够和真实标签一一对应（参见~\ref{sec:results}节）。在半监督学习中，如何充分利用有标签数据是一个很重要的问题。在算法~\ref{alg:ss-cig}中，我们采用投掷硬币的方式，决定如何采样。
-投掷一枚不公平硬币，正面向上的概率为$p$。设随机变量$X$表示投掷一次该硬币产生的结果，如正面向上，则$X=1$，反之$X=0$，显然$X\sim\text{Bern}(p)$。
-每一次采样前，投掷一次硬币，如果正面向上，则从有标签的数据中采样，否则从无标签数据采样。随着迭代次数的增加，逐渐减小正面向上的概率$p$至某个确定的值。这样做的好处是当$p$减小到最小值之后，虽然由无标签数据占据主导，但还是会偶尔出现一两个有标签的数据批次参与训练，给予无监督训练一定的指导。
+算法~\ref{alg:ss-cig}给出了半监督版本的C-InfoGAN的训练步骤，其中$\theta_g, ~\theta_d, ~\theta_g$分别为$G, ~D$和$Q$的网络参数。可以看到，在第\ref{ln:bid}行我们直接将有标签数据放入$Q$网络中训练，通过$Q$网络让标签信息流入虚假标签。在这种情况下，训练稳定之后绑定到类别的隐变量能够和真实标签一一对应（参见~\ref{sec:results}节）。在半监督学习中，如何充分利用有标签数据是一个很重要的问题。在算法~\ref{alg:ss-cig}中，做成功概率为$p$的Bernoulli试验。用随机变量$X$表示试验结果，
+%我们采用投掷硬币的方式，决定如何采样。
+%投掷一枚不公平硬币，正面向上的概率为$p$。设随机变量$X$表示投掷一次该硬币产生的结果，如正面向上，则$X=1$，反之$X=0$，
+显然$X\sim\text{Bern}(p)$。
+每一次采样前，做一次Bernoulli试验，如果$X=1$，则从有标签的数据中采样，否则从无标签数据采样。随着迭代次数的增加，逐渐减小成功概率$p$至某个确定的值。这样做的好处是当$p$减小到最小值之后，虽然由无标签数据占据主导，但还是会偶尔出现一两个有标签的数据批次参与训练，给予无监督训练一定的指导。
 \begin{algorithm}[htbp]
   \small
   \caption{Training procedure for semi-supervised C-InfoGAN}
@@ -210,7 +212,7 @@ CatGAN对GAN的扩展主要在于改变了判别器的输出结构：为所有�
   \label{fig:icg-arch}
 \end{figure}
 
-下面给出InfoCatGAN的损失函数：设$\mathbf{x} \in \mathcal{X}$为一个真实数据样本，$\tilde{\mathbf{x}} = G(\mathbf{z}, c)$为一个生成数据，其中$z\sim p_z$为噪声，$c\sim p_c$为隐变量。为了简单起见，这里只考虑$c$为一维离散随机变量，$p_c$为离散均匀分布。生成器$G = G(\mathbf{z}, c; ~\theta_G)$和判别器$D = D(\mathbf{x}; ~\theta_D)$均为可微深度神经网络，其中$\theta_G, ~\theta_D$分别为生成器和判别器的参数\footnote{为了简便起见，在无歧义的情况下通常省略网络参数。}。通过在$D$网络的最后一层做softmax变换，可以直接将$D(x)$作为条件概率$p(y|x)$的估计。注意到\eqref{eq:catgan-obj}式可以重写为：
+下面给出InfoCatGAN的损失函数：设$\mathbf{x} \in \mathcal{X}$为一个真实数据样本，$\tilde{\mathbf{x}} = G(\mathbf{z}, c)$为一个生成数据，其中$z\sim p_z$为噪声，$c\sim p_c$为隐变量。为了简单起见，这里只考虑$c$为一维离散随机变量，$p_c$为离散均匀分布。生成器$G = G(\mathbf{z}, c; ~\theta_G)$和判别器$D = D(\mathbf{x}; ~\theta_D)$均为可微深度神经网络，其中$\theta_G, ~\theta_D$分别为生成器和判别器的参数\footnote{参数通常省略。}。通过在$D$网络的最后一层做softmax变换，可以直接将$D(x)$作为条件概率$p(y|x)$的估计。注意到\eqref{eq:catgan-obj}式可以重写为：
 \begin{align}
   L_D^{\text{cat}} &= -I(X;Y)-
          \E_{\tilde{\mathbf{x}} \sim p_g}[H(p(y|\tilde{\mathbf{x}}))], \label{eq:lcatd} \\
