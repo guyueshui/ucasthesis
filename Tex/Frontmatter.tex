@@ -17,9 +17,9 @@
 \setcounter{page}{1}% 开始页码
 \pagenumbering{Roman}% 页码符号
 
-随着科技的发展，数据量日益增长，人们希望从这些原始数据中挖掘出感兴趣的信息。从一方面来看，这些数据数量庞大，所以靠人工去标注成本太高；另一方面这些高维数据复杂度高，所以常规的数据预处理方法也会失效。近年来深度学习领域研究活跃，其中生成对抗网络因其新颖的训练方式和超强的可扩展性受到了广泛关注。
+随着科技的发展，数据量也在日益增长，人们希望从这些原始数据中挖掘出感兴趣的信息。一方面，这些数据体量庞大，标签缺失，人工标注成本过高；另一方面这些高维数据极其复杂，所以常规的数据预处理方法也会失效。近年来深度学习领域研究活跃，涌现出不少处理高维数据的复杂模型，其中生成对抗网络因其新颖的训练方式和超强的可扩展性受到了广泛关注。
 
-本文研究了基于生成对抗网络的分类模型。传统的分类方法需要有标注的数据，而且容易过拟合，面对大量高维数据，这些方法不再适用。生成对抗网络可以无监督地进行训练，而且在模型稳定之后，生成的新数据可以用来扩充数据集。本文提出了两种基于生成对抗网络的分类模型：C-InfoGAN和InfoCatGAN。前者将InfoGAN扩展为分类模型，利用模型中的辅助网络做分类，能够在生成高质量图片的同时，达到较好的分类准确率；后者在 CatGAN 的基础上增加了互信息约束，使得生成的图片更加逼真。二者均能通过隐变量控制生成图片的类别，这对数据增强具有较大意义。此外，在加入少量标签信息之后，模型的准确率能大幅提高。
+本文研究了基于生成对抗网络的分类模型。传统的分类方法需要有大量标注的数据，而且容易过拟合，面对大量高维数据，这些方法不再适用。生成对抗网络可以无监督地进行训练，而且在模型稳定之后，生成的新数据可以用来扩充数据集。本文提出了两种基于生成对抗网络的分类模型：C-InfoGAN和InfoCatGAN。前者将InfoGAN扩展为分类模型，利用模型中的辅助网络做分类，能够在生成高质量图片的同时，达到较好的分类准确率；后者在 CatGAN 的基础上增加了互信息约束，使得生成的图片更加逼真。二者均能通过隐变量控制生成图片的类别，这对数据增强具有较大意义。此外，在加入少量标签信息之后，模型的准确率能大幅提高。
 
 \keywords{生成对抗网络，分类，无监督学习，半监督学习}% 中文关键词
 %-
@@ -27,9 +27,9 @@
 %-
 \intobmk\chapter*{Abstract}% 显示在书签但不显示在目录
 
-As the science and technology grow, the amount of data is increasing day by day. People want to mine valuable information from these raw data. On the one hand, the amount of these data is too large, so manual labeling is unrealistic; on the other hand, these high-dimensional data have high complexity, so classic data preprocessing methods will also fail. In recent years, the deep learning community is very active, and generative adversarial network has received extensive attention for its novel training methods and super-scalability.
+With the development of technology, the amount of data is increasing day by day. People want to mine valuable information from these raw data. On the one hand, the amount of these data is too large, so manual labeling is unrealistic; on the other hand, these high-dimensional data have high complexity, so classic data preprocessing methods will also fail. In recent years, there has been active researches in the deep learning community, and many complicated models have been proposed to process high-dimensional data, among which generative adversarial network has received extensive attention for its novel training methods and super-scalability.
 
-This thesis studies the classification models based on generative adversarial networks. Traditional classification methods require labeled data and are easy to overfit. Facing a large number of high-dimensional data, these methods are no longer applicable. Generative adversarial networks can be trained in an unsupervised manner, and the generated data from the trained model can be used to expand the data set. This thesis proposes two classification models based on generative adversarial networks: C-InfoGAN and InfoCatGAN. The former extends InfoGAN into a classification model, and uses the auxiliary network in the model for classification, which can achieve high classification accuracy while generating high-quality pictures; the latter adds mutual information constraints to CatGAN, making the generated pictures more realistic. Additionally, both two models can control the category of generated pictures through latent variables, which has great significance for data augmentation. In addition, after adding a small amount of label information, the accuracy of the model can be greatly improved.
+This thesis studies the classification models based on generative adversarial networks. Traditional classification methods require labeled data and are prone to overfit. Facing a large number of high-dimensional data, these methods are no longer applicable. Generative adversarial networks can be trained in an unsupervised manner, and the generated data from the trained model can be used to expand the data set. This thesis proposes two classification models based on generative adversarial networks: C-InfoGAN and InfoCatGAN. The former extends InfoGAN into a classification model, and uses the auxiliary network in the model for classification, which can achieve high classification accuracy while generating high-quality images; the latter adds mutual information constraints to CatGAN, making the generated images more realistic. Additionally, both two models can control the category of generated images through latent variables, which has quite significance for data augmentation. In addition, after adding a small amount of label information, the accuracy of the model can be greatly improved.
 
 \KEYWORDS{GAN, Classification, Unsupervised Learning, Semi-supervised Learning}% 英文关键词
 %---------------------------------------------------------------------------%
