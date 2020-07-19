@@ -186,11 +186,15 @@
     \toprule
     \multirow{2}{*}{\bf Model} & \multicolumn{2}{c}{\bf MNIST} & \multicolumn{2}{c}{\bf FashionMNIST}\\
     \cline{2-5}
-                           & 0 label & 132 labels & 0 label & 100 labels \\ \hline
+                           & 0 label & 132 labels & 0 label & 100 labels \\
+    \midrule
     ~ & \multicolumn{4}{c}{ACC(\%)} \\ \hline
     CatGAN & \textbf{89.18} & \textbf{98.22} & 67.38 & 71.07  \\
     InfoCatGAN & 87.76 & 96.89 & \textbf{70.61} & 75.24  \\
-    C-InfoGAN & 87.59 & 95.85 & 69.57 & \textbf{75.40}   \\
+    C-InfoGAN & 87.59 & 95.85 & 69.57 & \textbf{75.40}   \\ \hline
+    SVM & \multicolumn{2}{c}{96.57} & \multicolumn{2}{c}{88.36} \\
+    Decision Tree & \multicolumn{2}{c}{87.58} & \multicolumn{2}{c}{79.07} \\
+    Logistic Regression & \multicolumn{2}{c}{91.75} & \multicolumn{2}{c}{83.94} \\
     \hline\hline
     ~ & \multicolumn{4}{c}{FID} \\ \hline
     % DCGAN\cite{radford2015unsupervised} & 113.13 & - & - & - \\
@@ -215,7 +219,7 @@ InfoCatGAN 的分类准确率虽略低于CatGAN，但在图像生成质量上均
   \label{tab:lambda1}
   \begin{tabular}{ccc}
     \toprule
-    \textbf{$\lambda_1$} & \textbf{ACC (\%)} & \textbf{FID} \\
+    $\boldsymbol{\lambda_1}$ & \textbf{ACC (\%)} & \textbf{FID} \\
     \midrule
     0.0 & 98.22 & 21.36 \\
     0.2 & 97.55 & 18.13 \\
@@ -261,6 +265,8 @@ FashionMNIST\citep{xiao2017/online}是一个类似MNIST的数据集，二者拥�
 
 表~\ref{tab:acc}给出了模型在FashionMNIST的数值结果。
 从表中可以看出，在无监督条件下，InfoCatGAN较CatGAN在分类准确率和生成质量上均有所提升，C-InfoGAN在一定程度上兼顾二者，不仅生成质量最优，而且具有相对较高的分类准确率，此外其模型复杂度也较低。在半监督条件下，C-InfoGAN在两个方面均体现出优势，分类准确率达到了75.40\%，FID为15.99，生成效果见图~\ref{ffig:ss-ig}。
+
+为了与传统机器学习方法对比，表~\ref{tab:acc}中还给出了几种常用的机器学习分类方法在两个数据集上的分类准确率。值得注意的是，虽然传统机器学习方法如SVM和Logistic Regression也能达到不错的分类准确率，但它们都是监督学习方法，需要所有数据都有标签。并且，它们无法像GAN那样生成图片扩充数据集。
 
 \begin{figure}[hbtp]
   \centering
